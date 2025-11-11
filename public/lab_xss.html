@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Lab XSS — Demo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+  <div class="container">
+    <h3>Laboratório: Stored XSS (INSEGuro) — Apenas para aula</h3>
+    <p class="text-danger">Não use isso em produção. Inserções NÃO são sanitizadas.</p>
+
+    <form id="formLab">
+      <div class="mb-2">
+        <input id="autor" class="form-control" placeholder="Seu nome (autor)" required>
+      </div>
+      <div class="mb-2">
+        <textarea id="conteudo" class="form-control" placeholder='Escreva algo (ex: &lt;script&gt;alert("XSS")&lt;/script&gt;)' rows="3" required></textarea>
+      </div>
+      <button class="btn btn-primary">Enviar (vulnerável)</button>
+    </form>
+
+    <hr>
+
+    <h5>Mensagens salvas</h5>
+    <div id="lista"></div>
+  </div>
+
+  <script>
+    async function load() {
+      const r = await fetch('/lab/xss/list');
+      const data = await r.json();
+      const cont = document.getElementById('lista');
+      cont.innerHTML = ''; // <<-- aqui usamos innerHTML para demonstrar XSS
+      data.forEach(item => {
+        // conteúdo injetado diretamente no DOM (intencionalmente inseguro)
+        cont.innerHTML += `<div class="card mb-2 p-2"><strong>${item.autor}</strong> <small class="text-muted">${item.criadoEm}</small><div>${item.conteudo}</div></div>`;
+      });
+    }
+
+    document.getElementById('formLab').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const autor = document.getElementById('autor').value;
+      const conteudo = document.getElementById('conteudo').value;
+      await fetch('/lab/xss/store', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ autor, conteudo })
+      });
+      document.getElementById('conteudo').value = '';
+      load();
+    });
+
+    load();
+  </script>
+</body>
+</html>

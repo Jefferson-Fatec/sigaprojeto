@@ -161,10 +161,36 @@ app.post('/api/cadastrarUsuario', async (req, res) => {
     }
 });
 
+
+
+
+
+// === ROTA VULNERÁVEL: Stored XSS (APENAS LAB) ===
+// AVISO: rota de exemplo insegura - remover depois das aulas!
+const vulneraveis = []; // armazenamento em memória (reinicia ao reiniciar o servidor)
+
+app.post('/lab/xss/store', (req, res) => {
+  // espera { autor, conteudo } no body
+  const { autor, conteudo } = req.body || {};
+  if (!autor || !conteudo) return res.status(400).json({ error: 'autor e conteudo obrigatórios' });
+  // armazenando sem sanitização (intencionalmente inseguro)
+  vulneraveis.push({ id: vulneraveis.length + 1, autor, conteudo, criadoEm: new Date().toISOString() });
+  res.status(201).json({ message: 'salvo (lab)', id: vulneraveis.length });
+});
+
+app.get('/lab/xss/list', (req, res) => {
+  // retorna a lista completa (conteúdo não sanitizado)
+  res.json(vulneraveis);
+});
+
+
 // --- 6. Iniciando o Servidor ---
 
 app.listen(port, () => {
     console.log(`[${new Date().toISOString()}] Servidor de back-end rodando em http://localhost:${port}`);
     console.log(`[${new Date().toISOString()}] API de usuários pronta em /api/usuarios (GET)`);
     console.log(`[${new Date().toISOString()}] API de cadastro pronta em /api/cadastrarUsuario (POST)`);
+    console.log(`[${new Date().toISOString()}] Rota vulnerável de XSS pronta em /lab/xss/store (POST) e /lab/xss/list (GET)`);      
+    console.log(`[${new Date().toISOString()}] Lembre-se: remova as rotas de laboratório após os testes!`); 
+    
 });
